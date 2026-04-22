@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '../Common/Sidebar';
-import Header from '../Common/Header';
+import Sidebar from '../common/Sidebar';
+import Header from '../common/Header';
 import { motion } from 'framer-motion';
 import { Menu } from 'lucide-react'; // Premium icon import kiya hai
 
