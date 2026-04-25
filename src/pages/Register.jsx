@@ -87,7 +87,7 @@ const Register = () => {
                     value={formData.fullName}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
-                    placeholder="Rahul Sharma"
+                    placeholder="Enter Your Name"
                     disabled={isLoading}
                   />
                 </div>
@@ -101,7 +101,7 @@ const Register = () => {
                     value={formData.businessName}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
-                    placeholder="FitLife Gym"
+                    placeholder="Business Name"
                     disabled={isLoading}
                   />
                 </div>
@@ -116,7 +116,7 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
-                  placeholder="admin@company.com"
+                  placeholder="Your Email"
                   disabled={isLoading}
                 />
               </div>
