@@ -2,9 +2,8 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Command, CheckCircle, ShieldCheck, Zap, Layers, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { AuthContext } from '../context/AuthContext'; // Context Import kiya
+import { AuthContext } from '../context/AuthContext'; 
 
-// --- Background Moving Glows ---
 const AnimatedBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#050505]">
     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
@@ -15,7 +14,7 @@ const AnimatedBackground = () => (
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useContext(AuthContext); // Context se register function nikala
+  const { register } = useContext(AuthContext); 
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -26,6 +25,11 @@ const Register = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // 🔥 NAYA FEATURE: Google Login Function
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/google"; 
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,13 +47,11 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      // API call to backend
       await register(formData.fullName, formData.businessName, formData.email, formData.password);
       setIsLoading(false);
       navigate('/dashboard');
     } catch (err) {
       setIsLoading(false);
-      // Backend se jo error aayega wo yahan dikhega
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     }
   };
@@ -58,7 +60,6 @@ const Register = () => {
     <div className="min-h-screen flex bg-[#050505] font-sans selection:bg-white selection:text-black overflow-hidden relative text-white">
       <AnimatedBackground />
 
-      {/* LEFT SIDE: ULTRA-PREMIUM DARK FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative z-10 overflow-y-auto custom-scrollbar">
         <div className="w-full max-w-[440px] relative my-8">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/[0.02] rounded-full blur-3xl pointer-events-none"></div>
@@ -81,28 +82,18 @@ const Register = () => {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Full Name</label>
                   <input 
-                    type="text" 
-                    name="fullName"
-                    required
-                    value={formData.fullName}
-                    onChange={handleChange}
+                    type="text" name="fullName" required value={formData.fullName} onChange={handleChange} disabled={isLoading}
                     className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
                     placeholder="Enter Your Name"
-                    disabled={isLoading}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Workspace</label>
                   <input 
-                    type="text" 
-                    name="businessName"
-                    required
-                    value={formData.businessName}
-                    onChange={handleChange}
+                    type="text" name="businessName" required value={formData.businessName} onChange={handleChange} disabled={isLoading}
                     className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
                     placeholder="Business Name"
-                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -110,28 +101,18 @@ const Register = () => {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Work Email</label>
                 <input 
-                  type="email" 
-                  name="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
+                  type="email" name="email" required value={formData.email} onChange={handleChange} disabled={isLoading}
                   className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
                   placeholder="Your Email"
-                  disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Password</label>
                 <input 
-                  type="password" 
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
+                  type="password" name="password" required value={formData.password} onChange={handleChange} disabled={isLoading}
                   className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all duration-300 text-white font-medium placeholder:text-zinc-600 shadow-inner text-sm"
                   placeholder="At least 8 characters"
-                  disabled={isLoading}
                 />
               </div>
 
@@ -147,21 +128,34 @@ const Register = () => {
                 </label>
               </div>
 
-              <button 
-                type="submit" 
-                disabled={isLoading}
-                className="group w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black font-bold py-3.5 px-4 rounded-xl transition-all duration-300 active:scale-[0.98] mt-6 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] disabled:opacity-70"
-              >
-                {isLoading ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <>
-                    Start 14-Day Free Trial
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </>
+              <button type="submit" disabled={isLoading} className="group w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black font-bold py-3.5 px-4 rounded-xl transition-all duration-300 active:scale-[0.98] mt-6 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] disabled:opacity-70">
+                {isLoading ? <Loader2 className="animate-spin" size={18} /> : (
+                  <>Start 14-Day Free Trial <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
                 )}
               </button>
             </form>
+
+            {/* 🔥 NAYA FEATURE: Divider aur Google Button */}
+            <div className="mt-6 flex flex-col gap-5">
+              <div className="flex items-center gap-3 text-zinc-500">
+                <div className="h-[1px] w-full bg-white/10"></div>
+                <span className="text-xs font-bold tracking-widest">OR</span>
+                <div className="h-[1px] w-full bg-white/10"></div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="group w-full flex justify-center items-center gap-3 bg-[#18181b] border border-white/10 text-white px-4 py-3.5 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all font-semibold shadow-inner active:scale-[0.98]"
+              >
+                <img 
+                  src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                  alt="Google" 
+                  className="w-5 h-5 group-hover:scale-110 transition-transform" 
+                />
+                Sign up with Google
+              </button>
+            </div>
 
             <div className="mt-8 text-center text-sm font-medium text-zinc-500">
               Already have an account? <Link to="/login" className="text-white hover:underline hover:text-zinc-300 transition-colors">Log in</Link>
@@ -170,7 +164,6 @@ const Register = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDE: DEEP SPACE DARK MODE WIDGET DISPLAY */}
       <div className="hidden lg:flex w-1/2 items-center justify-center p-12 relative z-10">
         <div className="relative z-10 w-full max-w-lg">
           <div className="bg-[#09090b]/60 backdrop-blur-2xl border border-white/10 p-8 rounded-[2rem] shadow-2xl mb-12 transform hover:-translate-y-2 transition-transform duration-500">

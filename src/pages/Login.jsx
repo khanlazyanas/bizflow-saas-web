@@ -17,13 +17,16 @@ const AnimatedBackground = () => (
 const Login = () => {
   const navigate = useNavigate();
   
-  // 🔥 FIX: Naye states Magic Login ke liye
-  const [step, setStep] = useState(1); // Step 1: Email, Step 2: OTP
+  const [step, setStep] = useState(1); 
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- STEP 1: OTP BHEJO ---
+  // 🔥 NAYA FEATURE: Google Login Function
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/google"; 
+  };
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!email) return toast.error("Please enter your work email.");
@@ -32,7 +35,7 @@ const Login = () => {
     try {
       await axios.post('/api/auth/send-otp', { email });
       toast.success("Magic code sent to your email! ✨");
-      setStep(2); // OTP screen par le jao
+      setStep(2); 
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to send code. Are you registered?");
     } finally {
@@ -40,7 +43,6 @@ const Login = () => {
     }
   };
 
-  // --- STEP 2: OTP VERIFY KARO & LOGIN KARO ---
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) return toast.error("Please enter a valid 6-digit code.");
@@ -50,12 +52,11 @@ const Login = () => {
       await axios.post('/api/auth/verify-otp', { email, otp });
       toast.success("Login successful! 🚀");
       
-      // Cookie set ho chuki hai, ab Dashboard par le jao aur page refresh kar do taaki Context update ho jaye
       navigate('/dashboard');
       window.location.reload(); 
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid or expired code.");
-      setOtp(''); // Galat OTP par input clear kar do
+      setOtp(''); 
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +66,6 @@ const Login = () => {
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#050505] font-sans selection:bg-white selection:text-black text-white relative overflow-hidden">
       <AnimatedBackground />
 
-      {/* LEFT SIDE: ULTRA-PREMIUM DARK FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 py-16 lg:py-8 relative z-10">
         <div className="w-full max-w-[420px] relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/[0.02] rounded-full blur-3xl pointer-events-none"></div>
@@ -73,7 +73,6 @@ const Login = () => {
           <div className="relative z-10 bg-[#09090b]/60 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden">
             
             <AnimatePresence mode="wait">
-              {/* === STEP 1: EMAIL SCREEN === */}
               {step === 1 && (
                 <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
                   <div className="mb-10 text-center">
@@ -105,10 +104,32 @@ const Login = () => {
                       )}
                     </button>
                   </form>
+
+                  {/* 🔥 NAYA FEATURE: Divider aur Google Button */}
+                  <div className="mt-6 flex flex-col gap-5">
+                    <div className="flex items-center gap-3 text-zinc-500">
+                      <div className="h-[1px] w-full bg-white/10"></div>
+                      <span className="text-xs font-bold tracking-widest">OR</span>
+                      <div className="h-[1px] w-full bg-white/10"></div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      className="group w-full flex justify-center items-center gap-3 bg-[#18181b] border border-white/10 text-white px-4 py-3.5 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all font-semibold shadow-inner active:scale-[0.98]"
+                    >
+                      <img 
+                        src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                        alt="Google" 
+                        className="w-5 h-5 group-hover:scale-110 transition-transform" 
+                      />
+                      Continue with Google
+                    </button>
+                  </div>
+
                 </motion.div>
               )}
 
-              {/* === STEP 2: OTP SCREEN === */}
               {step === 2 && (
                 <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
                   <button onClick={() => setStep(1)} className="text-zinc-500 hover:text-white mb-6 flex items-center gap-1.5 text-sm font-semibold transition-colors">
@@ -129,7 +150,7 @@ const Login = () => {
                     <div className="space-y-2">
                       <input 
                         type="text" required maxLength="6" value={otp} 
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // Sirf numbers allow karega
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
                         disabled={isLoading}
                         className="w-full text-center tracking-[1rem] text-3xl px-4 py-4 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-white font-mono font-extrabold placeholder:text-zinc-700 shadow-inner"
                         placeholder="••••••"
@@ -151,7 +172,6 @@ const Login = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDE: DEEP SPACE DARK MODE WIDGET DISPLAY (UNCHANGED) */}
       <div className="hidden lg:flex w-full lg:w-1/2 items-center justify-center p-8 lg:p-12 py-16 relative z-10">
         <div className="relative z-10 w-full max-w-lg">
           <div className="bg-[#09090b]/60 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-[2rem] shadow-2xl mb-12 transform hover:-translate-y-2 transition-transform duration-500 group">
@@ -203,7 +223,7 @@ const Login = () => {
               <CheckCircle size={18} className="text-emerald-500" /> Passwordless Security
             </div>
             <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-zinc-500" /> AES-256 Encryption
+              <Sparkles size={18} className="text-zinc-500" /> Google 1-Click Login
             </div>
           </div>
         </div>
