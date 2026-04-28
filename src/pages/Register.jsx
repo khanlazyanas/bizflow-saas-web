@@ -26,9 +26,11 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 🔥 NAYA FEATURE: Google Login Function
+  // 🔥 FIX: Environment Variable for dynamic backend URL
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google"; 
+    // Vite uses import.meta.env. If it's not set, fallback to localhost.
+    const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    window.location.href = `${backendURL}/api/auth/google`; 
   };
 
   const handleChange = (e) => {
@@ -135,7 +137,6 @@ const Register = () => {
               </button>
             </form>
 
-            {/* 🔥 NAYA FEATURE: Divider aur Google Button */}
             <div className="mt-6 flex flex-col gap-5">
               <div className="flex items-center gap-3 text-zinc-500">
                 <div className="h-[1px] w-full bg-white/10"></div>

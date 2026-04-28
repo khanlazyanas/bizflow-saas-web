@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// --- Background Moving Glows ---
 const AnimatedBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#050505]">
     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
@@ -22,9 +21,10 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🔥 NAYA FEATURE: Google Login Function
+  // 🔥 FIX: Environment Variable for dynamic backend URL
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google"; 
+    const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    window.location.href = `${backendURL}/api/auth/google`; 
   };
 
   const handleSendOtp = async (e) => {
@@ -105,7 +105,6 @@ const Login = () => {
                     </button>
                   </form>
 
-                  {/* 🔥 NAYA FEATURE: Divider aur Google Button */}
                   <div className="mt-6 flex flex-col gap-5">
                     <div className="flex items-center gap-3 text-zinc-500">
                       <div className="h-[1px] w-full bg-white/10"></div>
