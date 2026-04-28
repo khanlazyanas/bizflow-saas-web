@@ -4,14 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
-// 🔥 FIX: autoTable ko is tarah import karna zaroori hai
 import autoTable from 'jspdf-autotable';
-
-// Auth aur Navigation ke liye
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-// --- Background Moving Glows ---
 const AnimatedBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
@@ -24,7 +20,6 @@ const Invoices = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // UI States
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,11 +29,9 @@ const Invoices = () => {
   const [payingId, setPayingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
-  // Data States
   const [invoices, setInvoices] = useState([]);
   const [tenants, setTenants] = useState([]);
 
-  // Form State
   const [formData, setFormData] = useState({
     tenantId: '',
     amount: '',
@@ -96,14 +89,15 @@ const Invoices = () => {
     }
   };
 
+  // 🔥 UPDATE: Hard delete ki jagah Soft Delete (Trash)
   const handleDeleteInvoice = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this invoice?")) return;
+    if (!window.confirm("Move this invoice to Recycle Bin? It will be permanently deleted after 30 days.")) return;
     
     setDeletingId(id);
     try {
       await axios.delete(`/api/invoices/${id}`);
       setInvoices(invoices.filter(inv => inv._id !== id));
-      toast.success("Invoice deleted successfully!");
+      toast.success("Invoice moved to Trash! 🗑️");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete invoice.");
     } finally {
@@ -166,7 +160,6 @@ const Invoices = () => {
       doc.setTextColor(80);
       doc.text(businessName, 14, 66);
 
-      // 🔥 FIX: doc.autoTable ki jagah autoTable(doc, ...) use karna padta hai
       autoTable(doc, {
         startY: 75,
         head: [['Description', 'Amount']],
@@ -220,12 +213,22 @@ const Invoices = () => {
               <p className="text-sm text-zinc-500 font-medium">Track payments and generate new invoices.</p>
             </div>
             
-            <button 
-              onClick={() => setIsInvoiceModalOpen(true)}
-              className="group flex items-center gap-2 bg-white hover:bg-zinc-200 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-            >
-              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" /> Create Invoice
-            </button>
+            <div className="flex gap-3">
+              {/* 🔥 NEW: Trash Button */}
+              <button 
+                onClick={() => navigate('/dashboard/trash')}
+                className="group flex items-center gap-2 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95"
+              >
+                <Trash2 size={18} className="text-zinc-400 group-hover:text-red-400 transition-colors" /> Recycle Bin
+              </button>
+
+              <button 
+                onClick={() => setIsInvoiceModalOpen(true)}
+                className="group flex items-center gap-2 bg-white hover:bg-zinc-200 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+              >
+                <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" /> Create Invoice
+              </button>
+            </div>
           </motion.div>
 
           <motion.div variants={itemVariants} className="mb-6 relative w-full">

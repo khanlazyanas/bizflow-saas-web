@@ -16,6 +16,7 @@ import Register from './pages/Register';
 // 🔥 Naye Pages Import kiye
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Trash from './pages/Trash';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           {/* FIX: Ye dono routes Dashboard ke bahar hone chahiye! */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword/>} />
+          <Route path="/dashboard/trash" element={<Trash/>} />
 
           {/* =========================================
               🔴 PROTECTED ROUTES (Sirf login hone par chalenge)
