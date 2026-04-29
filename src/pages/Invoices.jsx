@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock } from 'lucide-react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud } from 'lucide-react'; // 🔥 NAYA IMPORT: Sparkles & UploadCloud
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -19,6 +19,10 @@ const AnimatedBackground = () => (
 const Invoices = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // 🔥 NAYA FEATURE: AI Ke liye Refs aur State
+  const fileInputRef = useRef(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +68,54 @@ const Invoices = () => {
     }
   };
 
+  // =========================================================================
+  // 🔥 NAYA FEATURE: AI Image Scanner Logic
+  // =========================================================================
+  const handleAIUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const dataObj = new FormData();
+    dataObj.append('invoiceImage', file);
+
+    setIsScanning(true);
+    const loadingToast = toast.loading("🤖 AI is reading your document...");
+
+    try {
+      const { data } = await axios.post('/api/ai/scan-invoice', dataObj, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      const scannedData = data.data;
+
+      // Logic: AI ne jo naam diya, hum check karenge ki kya wo Tenant hamari list me hai?
+      let matchedTenantId = formData.tenantId;
+      if (scannedData.clientName) {
+        const matchedTenant = tenants.find(t => 
+          (t.businessName || '').toLowerCase().includes(scannedData.clientName.toLowerCase()) ||
+          scannedData.clientName.toLowerCase().includes((t.businessName || '').toLowerCase())
+        );
+        if (matchedTenant) matchedTenantId = matchedTenant._id;
+      }
+
+      // State me AI ka data bhar do
+      setFormData({
+        tenantId: matchedTenantId,
+        amount: scannedData.totalAmount ? String(scannedData.totalAmount) : formData.amount,
+        dueDate: scannedData.date || formData.dueDate
+      });
+
+      toast.success("✨ Magic! Details auto-filled successfully.", { id: loadingToast, icon: '🪄' });
+    } catch (error) {
+      console.error("AI Scan Error:", error);
+      toast.error("Failed to read document. Please try a clearer image.", { id: loadingToast });
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = ''; // Input clear karo taaki same file wapas daal sake
+    }
+  };
+  // =========================================================================
+
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
     if (!formData.tenantId) return toast.error("Please select a tenant first.");
@@ -89,7 +141,6 @@ const Invoices = () => {
     }
   };
 
-  // 🔥 UPDATE: Hard delete ki jagah Soft Delete (Trash)
   const handleDeleteInvoice = async (id) => {
     if (!window.confirm("Move this invoice to Recycle Bin? It will be permanently deleted after 30 days.")) return;
     
@@ -214,7 +265,6 @@ const Invoices = () => {
             </div>
             
             <div className="flex gap-3">
-              {/* 🔥 NEW: Trash Button */}
               <button 
                 onClick={() => navigate('/dashboard/trash')}
                 className="group flex items-center gap-2 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95"
@@ -349,16 +399,44 @@ const Invoices = () => {
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              className="relative w-full max-w-md bg-[#09090b] border border-white/10 rounded-[2rem] p-8 shadow-2xl"
+              className="relative w-full max-w-md bg-[#09090b] border border-white/10 rounded-[2rem] p-8 shadow-2xl overflow-hidden"
             >
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-2xl font-extrabold text-white tracking-tight">Draft Invoice</h3>
-                  <p className="text-xs text-zinc-500 font-medium mt-1">Generate a new bill for a tenant.</p>
+                  <p className="text-xs text-zinc-500 font-medium mt-1">Generate a new bill manually or use AI.</p>
                 </div>
-                <button onClick={() => setIsInvoiceModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors disabled:opacity-50" disabled={isSubmitting}>
+                <button onClick={() => setIsInvoiceModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors disabled:opacity-50" disabled={isSubmitting || isScanning}>
                   <X size={20} className="text-zinc-400 hover:text-white" />
                 </button>
+              </div>
+
+              {/* 🔥 AI SMART SCANNER BOX */}
+              <div className="relative p-[1px] rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-6">
+                <div className="bg-[#09090b] rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-3">
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleAIUpload} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30">
+                    {isScanning ? <Loader2 className="animate-spin text-indigo-400" /> : <Sparkles className="text-indigo-400" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">Auto-Fill with AI ✨</p>
+                    <p className="text-xs text-zinc-400 mt-1">Upload a bill or PO to automatically extract the amount and date.</p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isScanning}
+                    className="mt-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white transition-all w-full flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                  >
+                    {isScanning ? 'Scanning Document...' : <><UploadCloud size={16} /> Upload Receipt</>}
+                  </button>
+                </div>
               </div>
 
               <form className="space-y-5" onSubmit={handleCreateInvoice}>
@@ -374,8 +452,9 @@ const Invoices = () => {
                       value={formData.tenantId}
                       onChange={(e) => setFormData({...formData, tenantId: e.target.value})}
                       className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm appearance-none cursor-pointer"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isScanning}
                     >
+                      <option value="" disabled>Select a tenant...</option>
                       {tenants.map(t => (
                         <option key={t._id} value={t._id} className="bg-[#09090b]">{t.businessName}</option>
                       ))}
@@ -394,7 +473,7 @@ const Invoices = () => {
                       onChange={(e) => setFormData({...formData, amount: e.target.value})}
                       className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm font-mono" 
                       placeholder="0.00" 
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isScanning}
                     />
                   </div>
                   <div className="space-y-2">
@@ -405,13 +484,13 @@ const Invoices = () => {
                       value={formData.dueDate}
                       onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
                       className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm" 
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isScanning}
                     />
                   </div>
                 </div>
                 <button 
                   type="submit" 
-                  disabled={isSubmitting || tenants.length === 0}
+                  disabled={isSubmitting || tenants.length === 0 || isScanning}
                   className="w-full flex justify-center items-center gap-2 py-3.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-xl mt-4 transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-70"
                 >
                   {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'Generate & Send'}
