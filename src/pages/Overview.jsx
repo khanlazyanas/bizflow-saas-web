@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, CreditCard, DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight, Activity, Calendar, Download, Loader2, Minus } from 'lucide-react';
+import { Users, CreditCard, DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight, Activity, Calendar, Download, Loader2, Minus, Sparkles } from 'lucide-react'; // 🔥 NAYA IMPORT: Sparkles
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -39,7 +39,12 @@ const Overview = () => {
   const [activeIndex, setActiveIndex] = useState(null);
   
   const [isLoading, setIsLoading] = useState(true);
-  const [isExporting, setIsExporting] = useState(false); // Export Loading state
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // 🔥 NAYA STATE: AI Insights ke liye
+  const [aiInsight, setAiInsight] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(true);
+
   const [stats, setStats] = useState({
     totalRevenue: 0,
     activeTenants: 0,
@@ -56,6 +61,11 @@ const Overview = () => {
   useEffect(() => {
     fetchDashboardStats();
   }, [timeRange]);
+
+  // 🔥 NAYA EFFECT: AI Insight load karne ke liye (Sirf ek baar chalega)
+  useEffect(() => {
+    fetchAiInsights();
+  }, []);
 
   const fetchDashboardStats = async () => {
     try {
@@ -82,23 +92,36 @@ const Overview = () => {
     }
   };
 
-  // 🔥 NAYA FUNCTION: Data Export ke liye
+  // 🔥 NAYA FUNCTION: API se AI Analytics mangwane ke liye
+  const fetchAiInsights = async () => {
+    try {
+      setIsAiLoading(true);
+      const { data } = await axios.get('/api/ai/insights');
+      if (data.success) {
+        setAiInsight(data.insight);
+      }
+    } catch (error) {
+      console.error("AI Insight Error:", error);
+      setAiInsight("Unable to generate AI insights right now. Keep tracking your revenues!");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   const handleExportData = async () => {
     try {
       setIsExporting(true);
       const toastId = toast.loading("Generating your report...");
       
-      // Backend se blob (file) fetch karo
       const response = await axios.get('/api/dashboard/export', { responseType: 'blob' });
       
-      // Blob ko actual file (link) mein convert karke download trigger karo
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'BizFlow_Revenue_Report.csv');
       document.body.appendChild(link);
       link.click();
-      link.remove(); // Cleanup
+      link.remove(); 
 
       toast.success("Report downloaded successfully! 📊", { id: toastId });
     } catch (error) {
@@ -182,7 +205,6 @@ const Overview = () => {
               <div className="text-sm text-zinc-500 font-medium flex items-center gap-2"><div className='w-2 h-2 rounded-full bg-emerald-400 animate-pulse'></div> Your workspace metrics at a glance.</div>
             </div>
             
-            {/* 🔥 YAHAN UPDATE KIYA HAI BUTTON KO */}
             <button 
               onClick={handleExportData}
               disabled={isExporting}
@@ -191,6 +213,37 @@ const Overview = () => {
               {isExporting ? 'Exporting...' : 'Export Data'}
             </button>
           </motion.div>
+
+          {/* 🔥 NAYA FEATURE UI: AI Financial Advisor Widget */}
+          <motion.div variants={itemVariants} className="mb-6 relative p-[1px] rounded-3xl bg-gradient-to-r from-indigo-500/50 via-purple-500/50 to-pink-500/50 shadow-[0_0_30px_rgba(99,102,241,0.15)] overflow-hidden">
+            <div className="bg-[#09090b] rounded-3xl p-5 sm:p-6 flex items-start sm:items-center gap-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+              
+              <div className="p-3.5 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl border border-indigo-500/30 shrink-0 relative z-10">
+                {isAiLoading ? <Loader2 size={26} className="animate-spin text-indigo-400" /> : <Sparkles size={26} className="text-indigo-400" />}
+              </div>
+              
+              <div className="relative z-10 flex-1">
+                <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                  AI Financial Advisor
+                  <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] uppercase tracking-wider font-extrabold rounded-md border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                    Gemini Powered
+                  </span>
+                </h4>
+                {isAiLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-3.5 bg-white/5 rounded-md w-3/4 animate-pulse"></div>
+                    <div className="h-3.5 bg-white/5 rounded-md w-1/2 animate-pulse"></div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-300 leading-relaxed font-medium">
+                    {aiInsight}
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+          {/* 🔥 AI WIDGET END */}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <StatCard title="Total Revenue" value={`$${stats.totalRevenue.toLocaleString()}`} icon={DollarSign} trend={stats.revenueTrend} />
