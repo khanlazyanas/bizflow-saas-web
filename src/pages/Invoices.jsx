@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud } from 'lucide-react'; // 🔥 NAYA IMPORT: Sparkles & UploadCloud
+import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send } from 'lucide-react'; // 🔥 NAYA IMPORT: Send
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -20,7 +20,6 @@ const Invoices = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 🔥 NAYA FEATURE: AI Ke liye Refs aur State
   const fileInputRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
 
@@ -32,6 +31,7 @@ const Invoices = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [payingId, setPayingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [emailingId, setEmailingId] = useState(null); // 🔥 NAYA STATE: Email loading spinner ke liye
 
   const [invoices, setInvoices] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -68,9 +68,6 @@ const Invoices = () => {
     }
   };
 
-  // =========================================================================
-  // 🔥 NAYA FEATURE: AI Image Scanner Logic
-  // =========================================================================
   const handleAIUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -88,7 +85,6 @@ const Invoices = () => {
 
       const scannedData = data.data;
 
-      // Logic: AI ne jo naam diya, hum check karenge ki kya wo Tenant hamari list me hai?
       let matchedTenantId = formData.tenantId;
       if (scannedData.clientName) {
         const matchedTenant = tenants.find(t => 
@@ -98,7 +94,6 @@ const Invoices = () => {
         if (matchedTenant) matchedTenantId = matchedTenant._id;
       }
 
-      // State me AI ka data bhar do
       setFormData({
         tenantId: matchedTenantId,
         amount: scannedData.totalAmount ? String(scannedData.totalAmount) : formData.amount,
@@ -111,10 +106,9 @@ const Invoices = () => {
       toast.error("Failed to read document. Please try a clearer image.", { id: loadingToast });
     } finally {
       setIsScanning(false);
-      if (fileInputRef.current) fileInputRef.current.value = ''; // Input clear karo taaki same file wapas daal sake
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
-  // =========================================================================
 
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
@@ -167,6 +161,23 @@ const Invoices = () => {
       toast.error(error.response?.data?.message || "Failed to update status.");
     } finally {
       setPayingId(null);
+    }
+  };
+
+  // =========================================================================
+  // 🔥 NAYA FEATURE: Send Email Logic
+  // =========================================================================
+  const handleSendEmail = async (invoiceId) => {
+    setEmailingId(invoiceId);
+    const loadingToast = toast.loading("Sending email to client...");
+    try {
+      const { data } = await axios.post(`/api/invoices/${invoiceId}/send-email`);
+      toast.success(data.message || "Email sent successfully!", { id: loadingToast, icon: '📧' });
+    } catch (error) {
+      console.error("Email Error:", error);
+      toast.error(error.response?.data?.message || "Failed to send email.", { id: loadingToast });
+    } finally {
+      setEmailingId(null);
     }
   };
 
@@ -356,6 +367,16 @@ const Invoices = () => {
                         title={invoice.status === 'Paid' ? "Mark as Unpaid" : "Mark as Paid"}
                       >
                         {payingId === invoice._id ? <Loader2 size={18} className="animate-spin" /> : (invoice.status === 'Paid' ? <XCircle size={18} /> : <CheckCircle size={18} />)}
+                      </button>
+
+                      {/* 🔥 NAYA FEATURE: EMAIL BUTTON */}
+                      <button 
+                        onClick={() => handleSendEmail(invoice._id)}
+                        disabled={emailingId === invoice._id}
+                        className="text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 p-2 rounded-lg transition-all disabled:opacity-50"
+                        title="Send Email to Client"
+                      >
+                        {emailingId === invoice._id ? <Loader2 size={18} className="animate-spin text-blue-400" /> : <Send size={18} />}
                       </button>
 
                       <button 
