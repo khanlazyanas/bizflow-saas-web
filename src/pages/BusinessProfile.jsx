@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, MoreHorizontal, X, Loader2, Users, Building2 } from 'lucide-react';
+import { Search, Plus, MoreHorizontal, X, Loader2, Users, Building2, Mail } from 'lucide-react'; // 🔥 NAYA IMPORT: Mail
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -21,11 +21,13 @@ const BusinessProfile = () => {
   const [tenants, setTenants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState(null); // PRO FEATURE: Track which item is deleting
+  const [deletingId, setDeletingId] = useState(null);
 
+  // 🔥 NAYA STATE: 'email' field add kiya
   const [formData, setFormData] = useState({
     businessName: '',
     ownerName: '',
+    email: '', 
     plan: 'Starter Plan'
   });
 
@@ -53,7 +55,8 @@ const BusinessProfile = () => {
       setTenants([data.tenant, ...tenants]); 
       toast.success(`${formData.businessName} added successfully!`);
       setIsAddModalOpen(false);
-      setFormData({ businessName: '', ownerName: '', plan: 'Starter Plan' });
+      // 🔥 State Reset update kiya
+      setFormData({ businessName: '', ownerName: '', email: '', plan: 'Starter Plan' });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add tenant.");
     } finally {
@@ -84,14 +87,12 @@ const BusinessProfile = () => {
     tenant.ownerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // PRO FEATURE: Generate Initials for Avatar
   const getInitials = (name) => {
     if (!name) return 'B';
     const parts = name.trim().split(' ');
     return parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : parts[0][0].toUpperCase();
   };
 
-  // PRO FEATURE: Plan Badges
   const renderPlanBadge = (plan) => {
     switch(plan) {
       case 'Enterprise': 
@@ -161,7 +162,7 @@ const BusinessProfile = () => {
                   <thead>
                     <tr className="border-b border-white/5 bg-black/20">
                       <th className="px-7 py-5 text-xs font-bold text-zinc-500 uppercase tracking-widest">Business Detail</th>
-                      <th className="px-7 py-5 text-xs font-bold text-zinc-500 uppercase tracking-widest">Owner</th>
+                      <th className="px-7 py-5 text-xs font-bold text-zinc-500 uppercase tracking-widest">Contact Info</th>
                       <th className="px-7 py-5 text-xs font-bold text-zinc-500 uppercase tracking-widest">Status</th>
                       <th className="px-7 py-5 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
@@ -172,7 +173,6 @@ const BusinessProfile = () => {
                         
                         <td className="px-7 py-4">
                           <div className="flex items-center gap-4">
-                            {/* Avatar */}
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/5 flex items-center justify-center text-xs font-bold text-white shadow-lg">
                               {getInitials(tenant.businessName)}
                             </div>
@@ -184,8 +184,16 @@ const BusinessProfile = () => {
                         </td>
 
                         <td className="px-7 py-4">
-                          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-400">
-                            <Users size={14} className="text-zinc-500" /> {tenant.ownerName}
+                          <div className="flex flex-col justify-center gap-1">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                              <Users size={14} className="text-zinc-500" /> {tenant.ownerName}
+                            </div>
+                            {/* 🔥 NAYA UI: Yahan ab email dikhega table mein */}
+                            {tenant.email && (
+                              <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
+                                <Mail size={12} className="text-zinc-600" /> {tenant.email}
+                              </div>
+                            )}
                           </div>
                         </td>
 
@@ -206,7 +214,6 @@ const BusinessProfile = () => {
                           <AnimatePresence>
                             {openMenuId === (tenant._id || tenant.id) && (
                               <>
-                                {/* PRO FEATURE: Invisible overlay to close menu when clicked outside */}
                                 <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)}></div>
                                 
                                 <motion.div 
@@ -286,6 +293,21 @@ const BusinessProfile = () => {
                     disabled={isSubmitting}
                   />
                 </div>
+
+                {/* 🔥 NAYA INPUT: EMAIL KE LIYE */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Client Email</label>
+                  <input 
+                    type="email" 
+                    required 
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm" 
+                    placeholder="client@company.com" 
+                    disabled={isSubmitting}
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Owner Name</label>
