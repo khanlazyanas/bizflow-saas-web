@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send } from 'lucide-react'; // 🔥 NAYA IMPORT: Send
+import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -31,7 +31,7 @@ const Invoices = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [payingId, setPayingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
-  const [emailingId, setEmailingId] = useState(null); // 🔥 NAYA STATE: Email loading spinner ke liye
+  const [emailingId, setEmailingId] = useState(null); 
 
   const [invoices, setInvoices] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -164,9 +164,7 @@ const Invoices = () => {
     }
   };
 
-  // =========================================================================
-  // 🔥 NAYA FEATURE: Send Email Logic
-  // =========================================================================
+  // 🔥 SEND EMAIL LOGIC
   const handleSendEmail = async (invoiceId) => {
     setEmailingId(invoiceId);
     const loadingToast = toast.loading("Sending email to client...");
@@ -175,7 +173,7 @@ const Invoices = () => {
       toast.success(data.message || "Email sent successfully!", { id: loadingToast, icon: '📧' });
     } catch (error) {
       console.error("Email Error:", error);
-      toast.error(error.response?.data?.message || "Failed to send email.", { id: loadingToast });
+      toast.error(error.response?.data?.message || "Failed to send email. Check tenant email.", { id: loadingToast });
     } finally {
       setEmailingId(null);
     }
@@ -369,7 +367,7 @@ const Invoices = () => {
                         {payingId === invoice._id ? <Loader2 size={18} className="animate-spin" /> : (invoice.status === 'Paid' ? <XCircle size={18} /> : <CheckCircle size={18} />)}
                       </button>
 
-                      {/* 🔥 NAYA FEATURE: EMAIL BUTTON */}
+                      {/* 🔥 EMAIL BUTTON */}
                       <button 
                         onClick={() => handleSendEmail(invoice._id)}
                         disabled={emailingId === invoice._id}
@@ -432,7 +430,7 @@ const Invoices = () => {
                 </button>
               </div>
 
-              {/* 🔥 AI SMART SCANNER BOX */}
+              {/* AI SMART SCANNER BOX */}
               <div className="relative p-[1px] rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-6">
                 <div className="bg-[#09090b] rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-3">
                   <input 
