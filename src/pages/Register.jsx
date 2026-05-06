@@ -51,7 +51,8 @@ const Register = () => {
     try {
       await register(formData.fullName, formData.businessName, formData.email, formData.password);
       setIsLoading(false);
-      navigate('/dashboard');
+      // 🔥 FIX: Ab naya user seedha Setup Profile par jayega
+      navigate('/setup-profile');
     } catch (err) {
       setIsLoading(false);
       setError(err.response?.data?.message || "Registration failed. Please try again.");

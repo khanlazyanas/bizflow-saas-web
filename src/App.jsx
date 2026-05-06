@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Trash from './pages/Trash';
+import SetupProfile from './pages/SetupProfile';
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
 
           {/* 404 Page (Optional but good) */}
           <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="/setup-profile" element={<SetupProfile />} />
         </Routes>
       </Router>
     </AuthProvider>
