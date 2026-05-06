@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Command, CheckCircle, Activity, Loader2, Mail, KeyRound, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Sparkles, Command, CheckCircle, Activity, Loader2, Mail, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -16,9 +16,8 @@ const AnimatedBackground = () => (
 const Login = () => {
   const navigate = useNavigate();
   
-  const [step, setStep] = useState(1); 
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // 🔥 FIX: Environment Variable for dynamic backend URL
@@ -27,36 +26,20 @@ const Login = () => {
     window.location.href = `${backendURL}/api/auth/google`; 
   };
 
-  const handleSendOtp = async (e) => {
+  // 🔥 CLASSIC LOGIN: Email + Password
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email) return toast.error("Please enter your work email.");
+    if (!email || !password) return toast.error("Please fill in all fields.");
 
     setIsLoading(true);
     try {
-      await axios.post('/api/auth/send-otp', { email });
-      toast.success("Magic code sent to your email! ✨");
-      setStep(2); 
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send code. Are you registered?");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (otp.length !== 6) return toast.error("Please enter a valid 6-digit code.");
-
-    setIsLoading(true);
-    try {
-      await axios.post('/api/auth/verify-otp', { email, otp });
-      toast.success("Login successful! 🚀");
+      await axios.post('/api/auth/login', { email, password });
+      toast.success("Welcome back! 🚀");
       
       navigate('/dashboard');
       window.location.reload(); 
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid or expired code.");
-      setOtp(''); 
+      toast.error(err.response?.data?.message || "Invalid Email or Password.");
     } finally {
       setIsLoading(false);
     }
@@ -73,95 +56,73 @@ const Login = () => {
           <div className="relative z-10 bg-[#09090b]/60 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden">
             
             <AnimatePresence mode="wait">
-              {step === 1 && (
-                <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                  <div className="mb-10 text-center">
-                    <div className="flex justify-center mb-6">
-                      <div className="bg-white text-black p-3 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center justify-center">
-                        <Command size={28} strokeWidth={2.5} />
-                      </div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
+                <div className="mb-10 text-center">
+                  <div className="flex justify-center mb-6">
+                    <div className="bg-white text-black p-3 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center justify-center">
+                      <Command size={28} strokeWidth={2.5} />
                     </div>
-                    <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-white">Welcome back</h1>
-                    <p className="text-zinc-400 font-medium text-sm">Enter your email to receive a secure login code.</p>
                   </div>
+                  <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-white">Welcome back</h1>
+                  <p className="text-zinc-400 font-medium text-sm">Enter your credentials to access your workspace.</p>
+                </div>
 
-                  <form onSubmit={handleSendOtp} className="space-y-5">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Work Email</label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                        <input 
-                          type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading}
-                          className="w-full pl-11 pr-4 py-3.5 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all text-white font-medium placeholder:text-zinc-600 shadow-inner"
-                          placeholder="name@company.com"
-                        />
-                      </div>
-                    </div>
-
-                    <button type="submit" disabled={isLoading} className="group w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black font-bold py-3.5 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] mt-8 disabled:opacity-70">
-                      {isLoading ? <Loader2 className="animate-spin" size={18} /> : (
-                        <>Send Magic Code <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
-                      )}
-                    </button>
-                  </form>
-
-                  <div className="mt-6 flex flex-col gap-5">
-                    <div className="flex items-center gap-3 text-zinc-500">
-                      <div className="h-[1px] w-full bg-white/10"></div>
-                      <span className="text-xs font-bold tracking-widest">OR</span>
-                      <div className="h-[1px] w-full bg-white/10"></div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      className="group w-full flex justify-center items-center gap-3 bg-[#18181b] border border-white/10 text-white px-4 py-3.5 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all font-semibold shadow-inner active:scale-[0.98]"
-                    >
-                      <img 
-                        src="https://www.svgrepo.com/show/475656/google-color.svg" 
-                        alt="Google" 
-                        className="w-5 h-5 group-hover:scale-110 transition-transform" 
-                      />
-                      Continue with Google
-                    </button>
-                  </div>
-
-                </motion.div>
-              )}
-
-              {step === 2 && (
-                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-                  <button onClick={() => setStep(1)} className="text-zinc-500 hover:text-white mb-6 flex items-center gap-1.5 text-sm font-semibold transition-colors">
-                    <ArrowLeft size={16} /> Back
-                  </button>
-                  
-                  <div className="mb-8 text-center">
-                    <div className="flex justify-center mb-6">
-                      <div className="bg-indigo-500/20 text-indigo-400 p-4 rounded-2xl border border-indigo-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(79,70,229,0.2)]">
-                        <KeyRound size={28} strokeWidth={2.5} />
-                      </div>
-                    </div>
-                    <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-white">Check your email</h1>
-                    <p className="text-zinc-400 font-medium text-sm">We've sent a 6-digit secure code to <br/><span className="text-white">{email}</span></p>
-                  </div>
-
-                  <form onSubmit={handleVerifyOtp} className="space-y-5">
-                    <div className="space-y-2">
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Work Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
                       <input 
-                        type="text" required maxLength="6" value={otp} 
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
-                        disabled={isLoading}
-                        className="w-full text-center tracking-[1rem] text-3xl px-4 py-4 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-white font-mono font-extrabold placeholder:text-zinc-700 shadow-inner"
-                        placeholder="••••••"
+                        type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading}
+                        className="w-full pl-11 pr-4 py-3.5 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all text-white font-medium placeholder:text-zinc-600 shadow-inner"
+                        placeholder="name@company.com"
                       />
                     </div>
+                  </div>
 
-                    <button type="submit" disabled={isLoading || otp.length !== 6} className="group w-full flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] active:scale-[0.98] mt-8 disabled:opacity-50">
-                      {isLoading ? <Loader2 className="animate-spin" size={18} /> : 'Verify & Login'}
-                    </button>
-                  </form>
-                </motion.div>
-              )}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Password</label>
+                      <Link to="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Forgot?</Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                      <input 
+                        type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading}
+                        className="w-full pl-11 pr-4 py-3.5 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all text-white font-medium placeholder:text-zinc-600 shadow-inner"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={isLoading} className="group w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black font-bold py-3.5 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] mt-8 disabled:opacity-70">
+                    {isLoading ? <Loader2 className="animate-spin" size={18} /> : (
+                      <>Login to Workspace <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-6 flex flex-col gap-5">
+                  <div className="flex items-center gap-3 text-zinc-500">
+                    <div className="h-[1px] w-full bg-white/10"></div>
+                    <span className="text-xs font-bold tracking-widest">OR</span>
+                    <div className="h-[1px] w-full bg-white/10"></div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="group w-full flex justify-center items-center gap-3 bg-[#18181b] border border-white/10 text-white px-4 py-3.5 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all font-semibold shadow-inner active:scale-[0.98]"
+                  >
+                    <img 
+                      src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                      alt="Google" 
+                      className="w-5 h-5 group-hover:scale-110 transition-transform" 
+                    />
+                    Continue with Google
+                  </button>
+                </div>
+              </motion.div>
             </AnimatePresence>
 
             <div className="mt-8 text-center text-sm font-medium text-zinc-500">
@@ -214,12 +175,12 @@ const Login = () => {
             </span>
           </h2>
           <p className="text-base md:text-lg text-zinc-400 mb-10 leading-relaxed font-medium">
-            BizFlow replaces your messy passwords with a secure, 1-click magic code system designed for modern B2B professionals.
+            BizFlow offers a secure, fast, and reliable platform designed for modern B2B professionals.
           </p>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 text-zinc-400 text-sm font-medium">
             <div className="flex items-center gap-2">
-              <CheckCircle size={18} className="text-emerald-500" /> Passwordless Security
+              <CheckCircle size={18} className="text-emerald-500" /> Enterprise Security
             </div>
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-zinc-500" /> Google 1-Click Login
