@@ -18,6 +18,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Trash from './pages/Trash';
 import SetupProfile from './pages/SetupProfile';
+import PublicInvoice from './pages/PublicInvoice';
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           {/* 404 Page (Optional but good) */}
           <Route path="*" element={<Navigate to="/login" />} />
           <Route path="/setup-profile" element={<SetupProfile />} />
+          <Route path="/invoice/public/:id" element={<PublicInvoice />} />
         </Routes>
       </Router>
     </AuthProvider>
