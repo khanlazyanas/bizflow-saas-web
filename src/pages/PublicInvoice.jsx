@@ -10,6 +10,9 @@ const PublicInvoice = () => {
   const [loading, setLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
 
+  // Base URL setup taaki Vercel se Render connect hone me error na aaye
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
+
   useEffect(() => {
     fetchInvoice();
     // Razorpay ka script load karna zaroori hai
@@ -21,31 +24,38 @@ const PublicInvoice = () => {
 
   const fetchInvoice = async () => {
     try {
-      const { data } = await axios.get(`/api/invoices/public/${id}`);
+      const { data } = await axios.get(`${backendUrl}/api/invoices/public/${id}`);
       setInvoice(data.invoice);
     } catch (error) {
-      toast.error("Invalid or Expired Invoice Link");
+      console.error("Fetch Error:", error);
+      toast.error(error.response?.data?.message || "Invalid or Expired Invoice Link");
     } finally {
       setLoading(false);
     }
   };
 
   const handlePayment = async () => {
+    // 🛡️ Check if Razorpay SDK is loaded
+    if (!window.Razorpay) {
+      toast.error("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
     setIsPaying(true);
     try {
       // 1. Backend se Razorpay Order create karwao
-      const { data: orderData } = await axios.post(`/api/invoices/${id}/pay`);
+      const { data: orderData } = await axios.post(`${backendUrl}/api/invoices/${id}/pay`);
       
-      // 2. Razorpay ki API Key mangwao
-      const { data: keyData } = await axios.get('/api/payments/getkey');
+      // 2. Razorpay ki API Key mangwao (🔥 FIX: /api/payment/getkey kar diya hai)
+      const { data: keyData } = await axios.get(`${backendUrl}/api/payment/getkey`);
 
       const options = {
         key: keyData.key,
         amount: orderData.order.amount,
         currency: "INR",
-        name: invoice.user.businessName, // Tumhara business name
+        name: invoice.user?.businessName || "BizFlow Payment",
         description: `Payment for Invoice ${invoice.invoiceNumber}`,
-        image: invoice.user.avatar || "",
+        image: invoice.user?.avatar || "",
         order_id: orderData.order.id,
         handler: async function (response) {
           // 3. Payment verify karwao
@@ -57,30 +67,36 @@ const PublicInvoice = () => {
               invoice_id: id
             };
 
-            const { data: vRes } = await axios.post('/api/invoices/verify-payment', verifyData);
+            const { data: vRes } = await axios.post(`${backendUrl}/api/invoices/verify-payment`, verifyData);
             
             if (vRes.success) {
               toast.success("Payment Successful! 🎉");
-              fetchInvoice(); // Data refresh karo
+              fetchInvoice(); // Data refresh karo taaki 'Paid' dikhne lage
             }
           } catch (err) {
             toast.error("Payment Verification Failed!");
           }
         },
         prefill: {
-          name: invoice.tenant.businessName,
-          email: invoice.tenant.email,
+          name: invoice.tenant?.businessName,
+          email: invoice.tenant?.email,
         },
         theme: { color: "#4f46e5" },
+        modal: {
+          ondismiss: function() {
+            // Agar user payment window cancel kar de toh loading hata do
+            setIsPaying(false);
+          }
+        }
       };
 
       const razor = new window.Razorpay(options);
       razor.open();
     } catch (error) {
+      console.error("Payment Init Error:", error);
       toast.error("Could not initiate payment. Please try again.");
-    } finally {
       setIsPaying(false);
-    }
+    } 
   };
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>;
@@ -97,8 +113,8 @@ const PublicInvoice = () => {
             <p className="text-indigo-100 font-medium mt-1">{invoice.invoiceNumber}</p>
           </div>
           <div className="text-right">
-            <h3 className="text-xl font-bold">{invoice.user.businessName}</h3>
-            <p className="text-indigo-100 text-sm">{invoice.user.email}</p>
+            <h3 className="text-xl font-bold">{invoice.user?.businessName}</h3>
+            <p className="text-indigo-100 text-sm">{invoice.user?.email}</p>
           </div>
         </div>
 
@@ -107,8 +123,8 @@ const PublicInvoice = () => {
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Billed To</p>
-              <h2 className="text-xl font-bold text-white">{invoice.tenant.businessName}</h2>
-              <p className="text-zinc-400 text-sm">{invoice.tenant.email}</p>
+              <h2 className="text-xl font-bold text-white">{invoice.tenant?.businessName}</h2>
+              <p className="text-zinc-400 text-sm">{invoice.tenant?.email}</p>
             </div>
             <div className="text-right">
               {invoice.status === 'Paid' ? (
@@ -128,7 +144,7 @@ const PublicInvoice = () => {
             <div>
               <p className="text-zinc-500 text-sm font-medium">Total Amount Due</p>
               <h2 className="text-5xl font-black mt-1 tracking-tight text-indigo-400">
-                ${invoice.amount.toLocaleString()}
+                ${invoice.amount?.toLocaleString()}
               </h2>
             </div>
             {invoice.status !== 'Paid' && (
@@ -150,7 +166,7 @@ const PublicInvoice = () => {
              </div>
              <div className="flex justify-between text-lg font-medium py-2">
                 <span className="text-zinc-300">SaaS Subscription & Workspace Services</span>
-                <span className="text-white">${invoice.amount.toLocaleString()}</span>
+                <span className="text-white">${invoice.amount?.toLocaleString()}</span>
              </div>
           </div>
 
@@ -160,7 +176,7 @@ const PublicInvoice = () => {
               <ShieldCheck size={16} className="text-indigo-500" />
               Secure Payment via Razorpay
             </div>
-            <p>© {new Date().getFullYear()} {invoice.user.businessName}. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {invoice.user?.businessName}. All rights reserved.</p>
           </div>
         </div>
       </div>
