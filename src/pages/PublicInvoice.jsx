@@ -10,12 +10,11 @@ const PublicInvoice = () => {
   const [loading, setLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
 
-  // Base URL setup taaki Vercel se Render connect hone me error na aaye
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
+  // 🔥 FIX: Render ka URL fallback mein daal diya hai taaki Vercel par error na aaye
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://bizzflow-backend.onrender.com";
 
   useEffect(() => {
     fetchInvoice();
-    // Razorpay ka script load karna zaroori hai
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
@@ -35,7 +34,6 @@ const PublicInvoice = () => {
   };
 
   const handlePayment = async () => {
-    // 🛡️ Check if Razorpay SDK is loaded
     if (!window.Razorpay) {
       toast.error("Razorpay SDK failed to load. Are you online?");
       return;
@@ -46,7 +44,7 @@ const PublicInvoice = () => {
       // 1. Backend se Razorpay Order create karwao
       const { data: orderData } = await axios.post(`${backendUrl}/api/invoices/${id}/pay`);
       
-      // 2. Razorpay ki API Key mangwao (🔥 FIX: /api/payment/getkey kar diya hai)
+      // 2. Razorpay ki API Key mangwao
       const { data: keyData } = await axios.get(`${backendUrl}/api/payment/getkey`);
 
       const options = {
@@ -58,7 +56,6 @@ const PublicInvoice = () => {
         image: invoice.user?.avatar || "",
         order_id: orderData.order.id,
         handler: async function (response) {
-          // 3. Payment verify karwao
           try {
             const verifyData = {
               razorpay_order_id: response.razorpay_order_id,
@@ -71,7 +68,7 @@ const PublicInvoice = () => {
             
             if (vRes.success) {
               toast.success("Payment Successful! 🎉");
-              fetchInvoice(); // Data refresh karo taaki 'Paid' dikhne lage
+              fetchInvoice(); 
             }
           } catch (err) {
             toast.error("Payment Verification Failed!");
@@ -84,7 +81,6 @@ const PublicInvoice = () => {
         theme: { color: "#4f46e5" },
         modal: {
           ondismiss: function() {
-            // Agar user payment window cancel kar de toh loading hata do
             setIsPaying(false);
           }
         }
@@ -94,7 +90,8 @@ const PublicInvoice = () => {
       razor.open();
     } catch (error) {
       console.error("Payment Init Error:", error);
-      toast.error("Could not initiate payment. Please try again.");
+      // 🔥 FIX: Ab agar Razorpay fail hoga toh error message screen par dikhega
+      toast.error(error.response?.data?.message || "Could not initiate payment. Please try again.");
       setIsPaying(false);
     } 
   };
@@ -105,8 +102,6 @@ const PublicInvoice = () => {
   return (
     <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 font-sans">
       <div className="max-w-3xl mx-auto bg-[#09090b] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
-        
-        {/* Header Section */}
         <div className="bg-indigo-600 p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-black tracking-tighter">INVOICE</h1>
@@ -119,7 +114,6 @@ const PublicInvoice = () => {
         </div>
 
         <div className="p-8 md:p-12 space-y-10">
-          {/* Status Badge */}
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Billed To</p>
@@ -139,7 +133,6 @@ const PublicInvoice = () => {
             </div>
           </div>
 
-          {/* Amount Box */}
           <div className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
               <p className="text-zinc-500 text-sm font-medium">Total Amount Due</p>
@@ -158,7 +151,6 @@ const PublicInvoice = () => {
             )}
           </div>
 
-          {/* Details Table */}
           <div className="space-y-4">
              <div className="flex justify-between text-sm font-bold text-zinc-500 uppercase tracking-widest border-b border-white/5 pb-4">
                 <span>Description</span>
@@ -170,7 +162,6 @@ const PublicInvoice = () => {
              </div>
           </div>
 
-          {/* Footer Info */}
           <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-zinc-500 text-sm">
             <div className="flex items-center gap-2">
               <ShieldCheck size={16} className="text-indigo-500" />
