@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, MoreHorizontal, X, Loader2, Users, Building2, Mail } from 'lucide-react'; // 🔥 NAYA IMPORT: Mail
+import { Search, Plus, MoreHorizontal, X, Loader2, Users, Building2, Mail, Phone } from 'lucide-react'; // 🔥 Phone icon import kiya
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -23,11 +23,12 @@ const BusinessProfile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
-  // 🔥 NAYA STATE: 'email' field add kiya
+  // 🔥 NAYA STATE: 'phone' field add kiya
   const [formData, setFormData] = useState({
     businessName: '',
     ownerName: '',
     email: '', 
+    phone: '', // 🔥 WhatsApp ke liye zaroori
     plan: 'Starter Plan'
   });
 
@@ -55,8 +56,7 @@ const BusinessProfile = () => {
       setTenants([data.tenant, ...tenants]); 
       toast.success(`${formData.businessName} added successfully!`);
       setIsAddModalOpen(false);
-      // 🔥 State Reset update kiya
-      setFormData({ businessName: '', ownerName: '', email: '', plan: 'Starter Plan' });
+      setFormData({ businessName: '', ownerName: '', email: '', phone: '', plan: 'Starter Plan' }); // Form reset clear kiya
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add tenant.");
     } finally {
@@ -184,14 +184,21 @@ const BusinessProfile = () => {
                         </td>
 
                         <td className="px-7 py-4">
-                          <div className="flex flex-col justify-center gap-1">
+                          <div className="flex flex-col justify-center gap-1.5">
                             <div className="flex items-center gap-2 text-sm font-semibold text-zinc-300">
                               <Users size={14} className="text-zinc-500" /> {tenant.ownerName}
                             </div>
-                            {/* 🔥 NAYA UI: Yahan ab email dikhega table mein */}
+                            
                             {tenant.email && (
                               <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
                                 <Mail size={12} className="text-zinc-600" /> {tenant.email}
+                              </div>
+                            )}
+
+                            {/* 🔥 NAYA UI: Table mein Phone Number dikhega */}
+                            {tenant.phone && (
+                              <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
+                                <Phone size={12} className="text-emerald-500/70" /> {tenant.phone}
                               </div>
                             )}
                           </div>
@@ -294,18 +301,33 @@ const BusinessProfile = () => {
                   />
                 </div>
 
-                {/* 🔥 NAYA INPUT: EMAIL KE LIYE */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Client Email</label>
-                  <input 
-                    type="email" 
-                    required 
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm" 
-                    placeholder="client@company.com" 
-                    disabled={isSubmitting}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Client Email</label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm" 
+                      placeholder="client@company.com" 
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  
+                  {/* 🔥 NAYA INPUT: PHONE NUMBER KE LIYE */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">WhatsApp Number</label>
+                    <input 
+                      type="tel" 
+                      required 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:border-white/30 text-white text-sm" 
+                      placeholder="+91 9876543210" 
+                      disabled={isSubmitting}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
