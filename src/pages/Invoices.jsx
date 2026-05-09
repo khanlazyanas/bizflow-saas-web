@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send } from 'lucide-react'; 
+import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send, MessageCircle } from 'lucide-react'; // 🔥 NAYA: MessageCircle Import kiya
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -32,6 +32,7 @@ const Invoices = () => {
   const [payingId, setPayingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
   const [emailingId, setEmailingId] = useState(null); 
+  const [whatsappId, setWhatsappId] = useState(null); // 🔥 NAYA STATE FOR WHATSAPP
 
   const [invoices, setInvoices] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -176,6 +177,21 @@ const Invoices = () => {
       toast.error(error.response?.data?.message || "Failed to send email. Check tenant email.", { id: loadingToast });
     } finally {
       setEmailingId(null);
+    }
+  };
+
+  // 🔥 SEND WHATSAPP LOGIC (NAYA FEATURE)
+  const handleSendWhatsApp = async (invoiceId) => {
+    setWhatsappId(invoiceId);
+    const loadingToast = toast.loading("Sending WhatsApp message...");
+    try {
+      const { data } = await axios.post(`/api/invoices/${invoiceId}/send-whatsapp`);
+      toast.success(data.message || "WhatsApp sent successfully!", { id: loadingToast, icon: '💬' });
+    } catch (error) {
+      console.error("WhatsApp Error:", error);
+      toast.error(error.response?.data?.message || "Failed to send WhatsApp. Check tenant phone.", { id: loadingToast });
+    } finally {
+      setWhatsappId(null);
     }
   };
 
@@ -365,6 +381,16 @@ const Invoices = () => {
                         title={invoice.status === 'Paid' ? "Mark as Unpaid" : "Mark as Paid"}
                       >
                         {payingId === invoice._id ? <Loader2 size={18} className="animate-spin" /> : (invoice.status === 'Paid' ? <XCircle size={18} /> : <CheckCircle size={18} />)}
+                      </button>
+
+                      {/* 🔥 WHATSAPP BUTTON (NAYA FEATURE) */}
+                      <button 
+                        onClick={() => handleSendWhatsApp(invoice._id)}
+                        disabled={whatsappId === invoice._id}
+                        className="text-zinc-400 hover:text-emerald-500 hover:bg-emerald-500/10 p-2 rounded-lg transition-all disabled:opacity-50"
+                        title="Send via WhatsApp"
+                      >
+                        {whatsappId === invoice._id ? <Loader2 size={18} className="animate-spin text-emerald-500" /> : <MessageCircle size={18} />}
                       </button>
 
                       {/* 🔥 EMAIL BUTTON */}
