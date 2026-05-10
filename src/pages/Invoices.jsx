@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send, MessageCircle } from 'lucide-react'; // 🔥 NAYA: MessageCircle Import kiya
+import { Plus, Download, Receipt, X, Loader2, FileX, Search, Trash2, CheckCircle, Copy, XCircle, Lock, Sparkles, UploadCloud, Send, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -32,7 +32,11 @@ const Invoices = () => {
   const [payingId, setPayingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
   const [emailingId, setEmailingId] = useState(null); 
-  const [whatsappId, setWhatsappId] = useState(null); // 🔥 NAYA STATE FOR WHATSAPP
+  const [whatsappId, setWhatsappId] = useState(null); 
+
+  // 🔥 NAYA: Pagination States
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [invoices, setInvoices] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -43,19 +47,21 @@ const Invoices = () => {
     dueDate: ''
   });
 
+  // 🔥 NAYA: useEffect dependency updated to 'page'
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [page]);
 
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
       const [invoiceRes, tenantRes] = await Promise.all([
-        axios.get('/api/invoices'),
+        axios.get(`/api/invoices?page=${page}&limit=10`), // 🔥 Query update ho gayi
         axios.get('/api/tenants')
       ]);
       
       setInvoices(invoiceRes.data.invoices || []);
+      setTotalPages(invoiceRes.data.totalPages || 1); // 🔥 Total pages save kar liye
       setTenants(tenantRes.data.tenants || []);
       
       if (tenantRes.data.tenants && tenantRes.data.tenants.length > 0) {
@@ -124,7 +130,8 @@ const Invoices = () => {
         dueDate: formData.dueDate
       });
 
-      setInvoices([data.invoice, ...invoices]);
+      // Fetch fresh so pagination math isn't ruined
+      fetchInitialData();
       toast.success("Invoice generated successfully!");
       
       setIsInvoiceModalOpen(false);
@@ -165,7 +172,6 @@ const Invoices = () => {
     }
   };
 
-  // 🔥 SEND EMAIL LOGIC
   const handleSendEmail = async (invoiceId) => {
     setEmailingId(invoiceId);
     const loadingToast = toast.loading("Sending email to client...");
@@ -180,7 +186,6 @@ const Invoices = () => {
     }
   };
 
-  // 🔥 SEND WHATSAPP LOGIC (NAYA FEATURE)
   const handleSendWhatsApp = async (invoiceId) => {
     setWhatsappId(invoiceId);
     const loadingToast = toast.loading("Sending WhatsApp message...");
@@ -383,7 +388,6 @@ const Invoices = () => {
                         {payingId === invoice._id ? <Loader2 size={18} className="animate-spin" /> : (invoice.status === 'Paid' ? <XCircle size={18} /> : <CheckCircle size={18} />)}
                       </button>
 
-                      {/* 🔥 WHATSAPP BUTTON (NAYA FEATURE) */}
                       <button 
                         onClick={() => handleSendWhatsApp(invoice._id)}
                         disabled={whatsappId === invoice._id}
@@ -393,7 +397,6 @@ const Invoices = () => {
                         {whatsappId === invoice._id ? <Loader2 size={18} className="animate-spin text-emerald-500" /> : <MessageCircle size={18} />}
                       </button>
 
-                      {/* 🔥 EMAIL BUTTON */}
                       <button 
                         onClick={() => handleSendEmail(invoice._id)}
                         disabled={emailingId === invoice._id}
@@ -428,6 +431,31 @@ const Invoices = () => {
               ))
             )}
           </div>
+
+          {/* 🔥 NAYA: PAGINATION BUTTONS */}
+          {!isLoading && totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+              <button 
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 active:scale-95"
+              >
+                Previous
+              </button>
+              
+              <span className="text-zinc-400 text-sm font-medium">
+                Page <span className="text-white font-bold">{page}</span> of {totalPages}
+              </span>
+
+              <button 
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 active:scale-95"
+              >
+                Next
+              </button>
+            </div>
+          )}
 
         </motion.div>
       </div>
